@@ -1,0 +1,2 @@
+defmodule QuickieSynth do
+end
