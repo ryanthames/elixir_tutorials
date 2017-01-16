@@ -2,6 +2,12 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+config :blitzy, master_node: :"a@127.0.0.1"
+
+config :blitzy, slave_nodes: [:"b@127.0.0.1",
+                              :"c@127.0.0.1",
+                              :"d@127.0.0.1"]
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,
