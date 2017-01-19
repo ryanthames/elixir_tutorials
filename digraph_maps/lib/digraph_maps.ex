@@ -1,0 +1,2 @@
+defmodule DigraphMaps do
+end
