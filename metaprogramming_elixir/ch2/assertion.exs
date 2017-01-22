@@ -29,6 +29,12 @@ defmodule Assertion do
       Assertion.Test.assert(operator, lhs, rhs)
     end
   end
+  
+  defmacro refute({operator, _, [lhs, rhs]}) do
+    quote bind_quoted: [operator: operator, lhs: lhs, rhs: rhs] do
+      Assertion.Test.refute(operator, lhs, rhs)
+    end
+  end
 
   defmacro extend(options \\ []) do
     quote do
@@ -56,6 +62,18 @@ defmodule Assertion.Test do
     end)
   end
 
+  def refute(:==, lhs, rhs) when lhs != rhs do
+    :ok
+  end
+
+  def refute(:==, lhs, rhs) do
+    {:fail, """
+      Expected:              #{lhs}
+      to be not be equal to: #{rhs}
+      """
+    }
+  end
+
   def assert(:==, lhs, rhs) when lhs == rhs do
     :ok
   end
@@ -68,6 +86,18 @@ defmodule Assertion.Test do
     }
   end
 
+  def assert(:!=, lhs, rhs) when lhs != rhs do
+    :ok
+  end
+
+  def assert(:!=, lhs, rhs) do
+    {:fail, """
+      Expected:           #{lhs}
+      to not be equal to: #{rhs}
+      """
+    }
+  end
+
   def assert(:>, lhs, rhs) when lhs > rhs do
     :ok
   end
@@ -76,6 +106,18 @@ defmodule Assertion.Test do
     {:fail, """
       Expected:           #{lhs}
       to be greater than: #{rhs}
+      """
+    }
+  end
+
+  def assert(:<, lhs, rhs) when lhs < rhs do
+    :ok
+  end
+
+  def assert(:<, lhs, rhs) do
+    {:fail, """
+      Expected:           #{lhs}
+      to be less than: #{rhs}
       """
     }
   end
@@ -93,5 +135,10 @@ defmodule MathTest do
   test "integers can be multiplied or divided" do
     assert 5 * 5 == 25
     assert 10 / 2 == 5
+  end
+  
+  test "refute" do
+    refute 5 == 6
+    refute 10 == 10
   end
 end
