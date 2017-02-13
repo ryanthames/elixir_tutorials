@@ -1,0 +1,2 @@
+* Porcelain v2.0 (instead of 1.0.0)
+* no more teardown callback in ExUnit
