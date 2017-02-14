@@ -1,11 +1,10 @@
-defmodule WordClouds.Mixfile do
+defmodule ExprotobufPlayground.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :word_clouds,
+    [app: :exprotobuf_playground,
      version: "0.1.0",
      elixir: "~> 1.3",
-     test_coverage: [tool: Coverex.Task],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
@@ -29,7 +28,7 @@ defmodule WordClouds.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:coverex, "~> 1.4.12"}
+      {:exprotobuf, "~> 1.2.5"}
     ]
   end
 end
