@@ -7,10 +7,19 @@ defmodule Fly do
     import Supervisor.Spec, warn: false
 
     children = [
+      worker(LruCache, [:fly_cache, 1_000])
     ]
 
     opts = [strategy: :one_for_one, name: Fly.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  @doc """
+  Run the worker, checking and filling the cache given a cache key
+  """
+  @spec run_cached(binary(), atom(), binary(), map()) :: binary()
+  def run_cached(_cache_key, config_atom, input, options \\ %{}) do
+    run(config_atom, input, options)
   end
 
   @spec run(atom(), binary(), map()) :: binary()
