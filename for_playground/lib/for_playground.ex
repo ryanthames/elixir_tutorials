@@ -1,0 +1,2 @@
+defmodule ForPlayground do
+end
