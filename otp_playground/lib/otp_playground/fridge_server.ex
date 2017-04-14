@@ -26,7 +26,7 @@ defmodule OtpPlayground.FridgeServer do
   def handle_call({:take, item}, _from, state) do
     case Enum.member?(state, item) do
       true ->
-        {:reply, {:ok, item}, state}
+        {:reply, {:ok, item}, List.delete(state, item)}
       false ->
         {:reply, :not_found, state}
     end
