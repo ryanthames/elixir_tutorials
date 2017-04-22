@@ -2,7 +2,8 @@ defmodule FirestormData.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :firestorm_data,
+    [
+     app: :firestorm_data,
      version: "0.1.0",
      build_path: "../../_build",
      config_path: "../../config/config.exs",
@@ -11,7 +12,9 @@ defmodule FirestormData.Mixfile do
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps()]
+     deps: deps(),
+     aliases: aliases()
+    ]
   end
 
   # Configuration for the OTP application
@@ -40,6 +43,12 @@ defmodule FirestormData.Mixfile do
     [
       {:ecto, "~> 2.1.4"},
       {:postgrex, "~> 0.11"}
+    ]
+  end
+
+  defp aliases do
+    [
+      "test": ["ecto.drop --quiet", "ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 end
