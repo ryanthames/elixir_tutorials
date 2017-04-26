@@ -48,4 +48,23 @@ defmodule FirestormData.ThreadTest do
     refute thread2.id in thread_ids
     refute thread4.id in thread_ids
   end
+
+  test "find threads a user has posted in" do
+    user = insert(:user)
+    [t1, t2, t3] = insert_list(3, :thread)
+
+    insert(:post, %{thread: t1, user: user})
+    insert(:post, %{thread: t3, user: user})
+    insert(:post, %{thread: t2})
+
+    user_thread_ids =
+      user
+      |> Thread.posted_in_by_user
+      |> Repo.all
+      |> Enum.map(&(&1.id))
+
+    assert t1.id in user_thread_ids
+    assert t3.id in user_thread_ids
+    refute t2.id in user_thread_ids
+  end
 end
