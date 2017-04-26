@@ -13,7 +13,8 @@ defmodule FirestormData.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),
-     aliases: aliases()
+     aliases: aliases(),
+     elixirc_paths: elixirc_paths(Mix.env)
     ]
   end
 
@@ -42,7 +43,9 @@ defmodule FirestormData.Mixfile do
   defp deps do
     [
       {:ecto, "~> 2.1.4"},
-      {:postgrex, "~> 0.11"}
+      {:postgrex, "~> 0.11"},
+      {:ex_machina, "~> 2.0", only: :test},
+      {:faker, "~> 0.7", only: :test}
     ]
   end
 
@@ -51,4 +54,7 @@ defmodule FirestormData.Mixfile do
       "test": ["ecto.drop --quiet", "ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "web", "test/support"]
+  defp elixirc_paths(_), do: ["lib", "web"]
 end
