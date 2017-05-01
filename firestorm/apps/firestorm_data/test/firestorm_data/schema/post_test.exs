@@ -62,6 +62,14 @@ defmodule PostTest do
     post1 = insert(:post, %{body: "bar banana foo"})
     post2 = insert(:post, %{body: "bar potato foo"})
     post3 = insert(:post, %{body: "bar zanzibar foo"})
+
+    post_ids =
+      "banana"
+      |> Post.containing_body
+      |> Repo.all
+      |> Enum.map(&(&1.id))
+
+    assert [post1.id] == post_ids
   end
 
   defp create_other_users(_) do
