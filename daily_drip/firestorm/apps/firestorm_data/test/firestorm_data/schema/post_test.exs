@@ -20,7 +20,7 @@ defmodule FirestormData.PostTest do
   end
   
   describe "given some posts" do
-    setup [:create_other_users, :create_sample_posts]
+    setup [:create_other_users, :create_more_threads, :create_sample_posts]
 
     test "finding a post by a user", %{post1: post1, josh: josh} do
       query =
@@ -41,6 +41,56 @@ defmodule FirestormData.PostTest do
       posts_count = Repo.aggregate(query, :count, :id)
       assert posts_count == 2
     end
+
+    test "find three threads with the most recent posts in a category", %{category: category, hlp: hlp, erl: erl, fp: fp} do
+      query = 
+        from p in Post,
+        join: t in Thread,
+        where: p.thread_id == t.id and t.category_id == ^category.id,
+        order_by: [desc: p.inserted_at],
+        limit: 3,
+        preload: [:thread]
+
+      posts = Repo.all(query)
+      threads = posts |> Enum.map(&(&1.thread))
+      assert length(threads) == 3
+      assert hd(threads).id == hlp.id
+    end
+
+    test "find all threads a user has posted in", %{josh: josh, adam: adam} do
+      josh_query = 
+        from t in Thread,
+        join: p in Post,
+        where: p.thread_id == t.id and p.user_id == ^josh.id
+
+      adam_query = 
+        from t in Thread,
+        join: p in Post,
+        where: p.thread_id == t.id and p.user_id == ^adam.id
+
+      josh_count = Repo.aggregate(josh_query, :count, :id)
+      adam_count = Repo.aggregate(adam_query, :count, :id)
+
+      assert josh_count == 1
+      assert adam_count == 5
+    end
+
+    test "find number of posts in a thread", %{otp: otp} do
+      query = 
+        from p in Post,
+        where: p.thread_id == ^otp.id
+
+      assert Repo.aggregate(query, :count, :id) == 2
+    end
+
+    test "find posts that contain a string in the body" do
+      query =
+        from p in Post,
+        where: like(p.body, "%b%")
+
+      posts = Repo.all(query)
+      assert length(posts) == 5
+    end
   end
   
   defp create_other_users(_) do
@@ -51,7 +101,7 @@ defmodule FirestormData.PostTest do
     {:ok, adam: adam}
   end
 
-  defp create_sample_posts(%{otp: otp, josh: josh, adam: adam}) do
+  defp create_sample_posts(%{otp: otp, pipe: pipe, fp: fp, erl: erl, hlp: hlp, josh: josh, adam: adam}) do
     post1 =
       %Post{}
       |> Post.changeset(%{thread_id: otp.id, user_id: josh.id, body: "a"})
@@ -61,7 +111,36 @@ defmodule FirestormData.PostTest do
       %Post{}
       |> Post.changeset(%{thread_id: otp.id, user_id: adam.id, body: "b"})
       |> Repo.insert!
+
+    post3 =
+      %Post{}
+      |> Post.changeset(%{thread_id: pipe.id, user_id: adam.id, body: "b"})
+      |> Repo.insert!
+
+    post4 =
+      %Post{}
+      |> Post.changeset(%{thread_id: fp.id, user_id: adam.id, body: "b"})
+      |> Repo.insert!
+
+    post5 =
+      %Post{}
+      |> Post.changeset(%{thread_id: erl.id, user_id: adam.id, body: "b"})
+      |> Repo.insert!
+
+    post6 =
+      %Post{}
+      |> Post.changeset(%{thread_id: hlp.id, user_id: adam.id, body: "b"})
+      |> Repo.insert!
     
     {:ok, post1: post1, post2: post2}
+  end
+
+  defp create_more_threads(%{category: category}) do
+    {:ok, pipe} = %Thread{title: "The pipe operator is great", category_id: category.id} |> Repo.insert
+    {:ok, fp} = %Thread{title: "Functional programming is swell", category_id: category.id} |> Repo.insert
+    {:ok, erl} = %Thread{title: "Erlang is super relaible, pals", category_id: category.id} |> Repo.insert
+    {:ok, hlp} = %Thread{title: "Help! I suck at elixir!", category_id: category.id} |> Repo.insert
+
+    {:ok, pipe: pipe, fp: fp, erl: erl, hlp: hlp}
   end
 end
