@@ -2,6 +2,7 @@ defmodule FirestormData.PostTest do
   alias FirestormData.{Category, User, Thread, Post, Repo}
   use ExUnit.Case
   import Ecto.Query
+  import FirestormData.Factory
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
@@ -18,6 +19,38 @@ defmodule FirestormData.PostTest do
 
     assert {:ok, _} = Repo.insert(post_changeset)
   end
+
+  test "finding a user's Posts", %{josh: josh} do
+    [post1, post2, post3] = insert_list(3, :post, %{user: josh})
+    [post4, post5, post6] = insert_list(3, :post)
+
+    post_ids =
+      josh
+      |> Post.for_user
+      |> Repo.all
+      |> Enum.map(&(&1.id))
+
+    assert post1.id in post_ids
+    assert post2.id in post_ids
+    assert post3.id in post_ids
+    refute post4.id in post_ids
+    refute post5.id in post_ids
+    refute post6.id in post_ids
+  end
+
+  test "finding posts with a particular string in them" do
+    post1 = insert(:post, %{body: "bar banana foo"})
+    post2 = insert(:post, %{body: "bar potato foo"})
+    post3 = insert(:post, %{body: "bar zanzibar foo"})
+
+    post_ids =
+      "banana"
+      |> Post.containing_body
+      |> Repo.all
+      |> Enum.map(&(&1.id))
+    
+    assert [post1.id] == post_ids
+  end
   
   describe "given some posts" do
     setup [:create_other_users, :create_more_threads, :create_sample_posts]
@@ -33,64 +66,64 @@ defmodule FirestormData.PostTest do
       assert hd(posts).user.username == "josh"
     end
 
-    test "counting the posts in a thread", %{otp: otp} do
-      query =
-        from p in Post,
-        where: p.thread_id == ^otp.id
+    # test "counting the posts in a thread", %{otp: otp} do
+    #   query =
+    #     from p in Post,
+    #     where: p.thread_id == ^otp.id
 
-      posts_count = Repo.aggregate(query, :count, :id)
-      assert posts_count == 2
-    end
+    #   posts_count = Repo.aggregate(query, :count, :id)
+    #   assert posts_count == 2
+    # end
 
-    test "find three threads with the most recent posts in a category", %{category: category, hlp: hlp, erl: erl, fp: fp} do
-      query = 
-        from p in Post,
-        join: t in Thread,
-        where: p.thread_id == t.id and t.category_id == ^category.id,
-        order_by: [desc: p.inserted_at],
-        limit: 3,
-        preload: [:thread]
+    # test "find three threads with the most recent posts in a category", %{category: category, hlp: hlp, erl: erl, fp: fp} do
+    #   query = 
+    #     from p in Post,
+    #     join: t in Thread,
+    #     where: p.thread_id == t.id and t.category_id == ^category.id,
+    #     order_by: [desc: p.inserted_at],
+    #     limit: 3,
+    #     preload: [:thread]
 
-      posts = Repo.all(query)
-      threads = posts |> Enum.map(&(&1.thread))
-      assert length(threads) == 3
-      assert hd(threads).id == hlp.id
-    end
+    #   posts = Repo.all(query)
+    #   threads = posts |> Enum.map(&(&1.thread))
+    #   assert length(threads) == 3
+    #   assert hd(threads).id == hlp.id
+    # end
 
-    test "find all threads a user has posted in", %{josh: josh, adam: adam} do
-      josh_query = 
-        from t in Thread,
-        join: p in Post,
-        where: p.thread_id == t.id and p.user_id == ^josh.id
+    # test "find all threads a user has posted in", %{josh: josh, adam: adam} do
+    #   josh_query = 
+    #     from t in Thread,
+    #     join: p in Post,
+    #     where: p.thread_id == t.id and p.user_id == ^josh.id
 
-      adam_query = 
-        from t in Thread,
-        join: p in Post,
-        where: p.thread_id == t.id and p.user_id == ^adam.id
+    #   adam_query = 
+    #     from t in Thread,
+    #     join: p in Post,
+    #     where: p.thread_id == t.id and p.user_id == ^adam.id
 
-      josh_count = Repo.aggregate(josh_query, :count, :id)
-      adam_count = Repo.aggregate(adam_query, :count, :id)
+    #   josh_count = Repo.aggregate(josh_query, :count, :id)
+    #   adam_count = Repo.aggregate(adam_query, :count, :id)
 
-      assert josh_count == 1
-      assert adam_count == 5
-    end
+    #   assert josh_count == 1
+    #   assert adam_count == 5
+    # end
 
-    test "find number of posts in a thread", %{otp: otp} do
-      query = 
-        from p in Post,
-        where: p.thread_id == ^otp.id
+    # test "find number of posts in a thread", %{otp: otp} do
+    #   query = 
+    #     from p in Post,
+    #     where: p.thread_id == ^otp.id
 
-      assert Repo.aggregate(query, :count, :id) == 2
-    end
+    #   assert Repo.aggregate(query, :count, :id) == 2
+    # end
 
-    test "find posts that contain a string in the body" do
-      query =
-        from p in Post,
-        where: like(p.body, "%b%")
+    # test "find posts that contain a string in the body" do
+    #   query =
+    #     from p in Post,
+    #     where: like(p.body, "%b%")
 
-      posts = Repo.all(query)
-      assert length(posts) == 5
-    end
+    #   posts = Repo.all(query)
+    #   assert length(posts) == 5
+    # end
   end
   
   defp create_other_users(_) do
